@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <UserSecretsId>4f069ebb-6d5b-455b-be75-880ded647455</UserSecretsId>
+	  <FileVersion>1.1.10</FileVersion>
+	  <Version>1.1.10</Version>
+	  <ApplicationIcon>eiq.ico</ApplicationIcon>
+	  
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="GlobalMethods.cs" />
+    <Compile Remove="ProxyController.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\NETStd\Libraries\VSSystem\VSSystem.csproj" />
+  </ItemGroup>
+
+
+</Project>
