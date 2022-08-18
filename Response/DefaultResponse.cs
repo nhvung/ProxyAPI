@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Threading.Tasks;
+﻿using System.Net;
 using System.Xml.Serialization;
 
-namespace VSSystem.Hosting.Webs.Response
+namespace ProxyAPI.Response
 {
     [XmlRoot("Response")]
     [XmlType(AnonymousType = true)]

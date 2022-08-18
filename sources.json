@@ -1,0 +1,37 @@
+﻿{
+  "C:\\Data\\Code\\Share\\src\\NETCore\\Libraries\\ProxyAPI\\ProxyAPI.csproj": {
+    "Name": "ProxyAPI",
+    "ExcludeCondition": {
+      "FileNames": [
+        "aspnetcorev2_inprocess.dll",
+        "e_sqlite3.dll",
+        "sni.dll",
+        "sources.json",
+        "ProxyAPI.deps.json"
+      ],
+      "FolderNames": [],
+      "FileExtensions": [
+        ".vspscc",
+        ".bak",
+        ".sln",
+        ".scc",
+        ".pdb",
+        ".bak",
+        ".tmp"
+      ],
+      "FilePrefixNames": [],
+      "FolderPrefixNames": []
+    },
+    "OutputPath": "c:/Data/Code/Share/build/ProxyAPI",
+    "Framework": "netcoreapp3.1",
+    "Version": "2.0.3",
+    "FileVersion": "2.0.3",
+    "OutputType": "Exe",
+    "Description": "Proxy 2.0",
+    "AssemblyName": "ProxyAPI",
+    "Company": "Evidence IQ",
+    "Authors": "Evidence IQ",
+    "Copyright": "Evidence IQ",
+    "ProjectFilePath": "C:\\Data\\Code\\Share\\src\\NETCore\\Libraries\\ProxyAPI\\ProxyAPI.csproj"
+  }
+}

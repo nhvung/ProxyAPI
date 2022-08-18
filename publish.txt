@@ -1,0 +1,10 @@
+dotnet publish "SupportBuild.csproj" -c Release -f net6.0 -r linux-x64 -v q -p:PublishSingleFile=true -p:SelfContained=true -p:PublishTrimmed=true
+
+
+dotnet publish -c Release -f netcoreapp3.1 -v q -o "c:\Data\Code\Share\build\ProxyAPI\publish\"
+
+dotnet publish -c Release -f netcoreapp3.1 -r win-x64 --nologo  --self-contained false -p:"PublishSingleFile=false;PublishTrimmed=true" -o "c:\Data\Code\Share\build\ProxyAPI\win-x64\ProxyAPI.2.0.2"
+
+dotnet publish -c Release -f netcoreapp3.1 --nologo  --self-contained false -o "c:\Data\Code\Share\build\ProxyAPI\win-x64\ProxyAPI.2.0.2"
+
+dotnet publish -c Release -f netcoreapp3.1 -r linux-x64 --nologo -p:SelfContained=false -p:ErrorOnDuplicatePublishOutputFiles=false -o "c:\\Data\\Code\\Share\\build\\ProxyAPI\\ProxyAPI.2.0.2"

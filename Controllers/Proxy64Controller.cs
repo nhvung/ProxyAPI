@@ -1,18 +1,20 @@
-﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Extensions;
 using ProxyAPI.Response;
 using System;
+using System.Linq;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web;
 using VSSystem.Logger.Extensions;
 
 namespace ProxyAPI.Controllers
 {
-    public static class ProxyController
+    public static class Proxy64Controller
     {
         const int _BUFFER_SIZE = 16384;
-        const string _LOGNAME = "ProxyController";
+        const string _LOGNAME = "Proxy64Controller";
         public async static Task Process(HttpContext context)
         {
             DateTime requestTime = DateTime.UtcNow;
@@ -33,78 +35,83 @@ namespace ProxyAPI.Controllers
                 }
                 else
                 {
-                    string baseUrl = context.Request.GetEncodedUrl();
+                    string baseUrl = context.Request.Headers["ProxyBaseUrl"];
+                    if (string.IsNullOrWhiteSpace(baseUrl))
+                    {
+                        baseUrl = context.Request.GetEncodedUrl();
+                    }
+
 
                     string newUrl = string.Format("{0}/{1}{2}", WebConfig.ApiUrl, path, context.Request.QueryString);
 
-                    HttpWebRequest httpRequest = WebRequest.CreateHttp(newUrl);
+                    HttpClientHandler handler = new HttpClientHandler();
+                    handler.ServerCertificateCustomValidationCallback = delegate { return true; };
 
-                    httpRequest.ServerCertificateValidationCallback = delegate { return true; };
-                    httpRequest.Method = context.Request.Method;
-                    httpRequest.Headers.Clear();
+                    var client = new HttpClient(handler);
+                    client.Timeout = new TimeSpan(0, 0, WebConfig.DefaultTimeout);
 
-                    httpRequest.Headers.Add("ProxyBaseUrl", baseUrl);
-
-                    if (WebConfig.DefaultTimeout > 0)
-                    {
-                        httpRequest.Timeout = WebConfig.DefaultTimeout;
-                    }
-
+                    HttpRequestMessage rMess = new HttpRequestMessage(new HttpMethod(context.Request.Method), newUrl);
+                    rMess.Headers.Add("ProxyBaseUrl", baseUrl);
                     if (context.Request.Headers?.Count > 0)
                     {
                         foreach (var header in context.Request.Headers)
                         {
-                            httpRequest.Headers.Add(header.Key, HttpUtility.HtmlEncode(header.Value));
-                        }
-                    }
-
-                    httpRequest.ContentType = context.Request.ContentType;
-                    if (string.IsNullOrEmpty(httpRequest.ContentType))
-                    {
-                        httpRequest.ContentType = "application/soap+xml";
-                    }
-                    httpRequest.ContentLength = context.Request.ContentLength ?? 0;
-                    if (context.Request.ContentLength > 0)
-                    {
-                        using (var toStream = httpRequest.GetRequestStream())
-                        {
-                            await context.Request.Body.CopyToAsync(toStream, context.RequestAborted);
-                        }
-                    }
-
-
-                    using (var httpResponse = await httpRequest.GetResponseAsync())
-                    {
-                        context.Response.Headers.Clear();
-                        foreach (var headerKey in httpResponse.Headers.AllKeys)
-                        {
-                            context.Response.Headers.Add(headerKey, HttpUtility.HtmlEncode(httpResponse.Headers[headerKey]));
-                            if (headerKey.Equals("ResponseTimeInMiliseconds", StringComparison.InvariantCultureIgnoreCase))
+                            foreach (var value in header.Value)
                             {
-                                double.TryParse(httpResponse.Headers[headerKey], out processTime);
+                                try
+                                {
+                                    rMess.Headers.Add(header.Key, HttpUtility.HtmlEncode(value));
+                                }
+                                catch { }
                             }
                         }
-                        context.Response.ContentType = httpResponse.ContentType;
-
-
-                        try
-                        {
-                            context.Response.ContentLength = httpResponse.ContentLength;
-                            contentLength = httpResponse.ContentLength;
-                        }
-                        catch { }
-
-                        using (var resStream = httpResponse.GetResponseStream())
-                        {
-                            await resStream.CopyToAsync(context.Response.Body, context.RequestAborted);
-
-                            resStream.Close();
-                            resStream.Dispose();
-                        }
-
-                        httpResponse.Close();
-                        httpResponse.Dispose();
                     }
+                    if (context.Request.ContentLength > 0)
+                    {
+                        rMess.Content = new StreamContent(context.Request.Body);
+                        rMess.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(context.Request.ContentType);
+                    }
+
+                    var response = await client.SendAsync(rMess);
+                    try
+                    {
+                        context.Response.Headers.Clear();
+                        if (response.Content?.Headers?.Count() > 0)
+                        {
+                            foreach (var header in response.Content.Headers)
+                            {
+                                foreach (var value in header.Value)
+                                {
+                                    context.Response.Headers.Add(header.Key, HttpUtility.HtmlEncode(value));
+                                }
+                                if (header.Key.Equals("ResponseTimeInMiliseconds", StringComparison.InvariantCultureIgnoreCase))
+                                {
+                                    double.TryParse(header.Value.ToString(), out processTime);
+                                }
+                            }
+                        }
+
+                        context.Response.StatusCode = (int)response.StatusCode;
+                        context.Response.ContentLength = response.Content.Headers.ContentLength;
+                        context.Response.ContentType = response.Content.Headers.ContentType.ToString();
+
+                        await response.Content.CopyToAsync(context.Response.Body);
+                    }
+                    catch (Exception ex)
+                    {
+                        xmlContentType.LogError(WebConfig.Logger, _LOGNAME, ex, WebConfig.web_component_name);
+                        if (xmlContentType)
+                        {
+                            await ex.ResponseXmlAsync(context, new DefaultResponse(HttpStatusCode.InternalServerError, ex.Message), System.Net.HttpStatusCode.InternalServerError);
+                        }
+                        else
+                        {
+                            await ex.ResponseJsonAsync(context, new DefaultResponse(HttpStatusCode.InternalServerError, ex.Message), System.Net.HttpStatusCode.InternalServerError);
+                        }
+                    }
+
+                    client.Dispose();
+
                 }
             }
             catch (WebException ex)
@@ -125,16 +132,6 @@ namespace ProxyAPI.Controllers
                         using (var resStream = httpResponse.GetResponseStream())
                         {
                             await resStream.CopyToAsync(context.Response.Body, context.RequestAborted);
-                            //int ret = -1;
-                            //do
-                            //{
-                            //    byte[] buff = new byte[_BUFFER_SIZE];
-                            //    ret = await resStream.ReadAsync(buff, 0, buff.Length, context.RequestAborted);
-                            //    if (ret > 0)
-                            //    {
-                            //        await context.Response.Body.WriteAsync(buff, 0, ret, context.RequestAborted);
-                            //    }
-                            //} while (ret > 0);
 
                             resStream.Close();
                             resStream.Dispose();
@@ -168,6 +165,18 @@ namespace ProxyAPI.Controllers
                     }
                 }
 
+            }
+            catch (Exception ex)
+            {
+                xmlContentType.LogError(WebConfig.Logger, _LOGNAME, ex, WebConfig.web_component_name);
+                if (xmlContentType)
+                {
+                    await ex.ResponseXmlAsync(context, new DefaultResponse(HttpStatusCode.InternalServerError, ex.Message), System.Net.HttpStatusCode.InternalServerError);
+                }
+                else
+                {
+                    await ex.ResponseJsonAsync(context, new DefaultResponse(HttpStatusCode.InternalServerError, ex.Message), System.Net.HttpStatusCode.InternalServerError);
+                }
             }
 
             DateTime finishTime = DateTime.UtcNow;

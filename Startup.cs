@@ -1,15 +1,8 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ProxyAPI
 {
@@ -31,17 +24,13 @@ namespace ProxyAPI
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-           
             app.UseHttpsRedirection();
 
             app.UseRouting();
 
             app.UseAuthorization();
 
-            app.Run(async (context) => {
-                await ProxyAPI.Controllers.ProxyController.Process(context);
-            });
-
+            app.Run(ProxyAPI.Controllers.Proxy64Controller.Process);
 
             try
             {
@@ -49,7 +38,7 @@ namespace ProxyAPI
                 string sDefaultTimeout = Configuration.GetValue<string>("DEFAULT_TIMEOUT");
                 int defaultTimeout = 0;
                 int.TryParse(sDefaultTimeout, out defaultTimeout);
-                if(defaultTimeout <= 0)
+                if (defaultTimeout <= 0)
                 {
                     defaultTimeout = -1;
                 }
@@ -59,7 +48,7 @@ namespace ProxyAPI
                 }
                 WebConfig.DefaultTimeout = defaultTimeout;
 
-                WebConfig.TimeHeaders = new string[] { "Process(ms)", "Transfer(ms)", "Content Length(bytes)", "Speed", "URL"};
+                WebConfig.TimeHeaders = new string[] { "Process(ms)", "Transfer(ms)", "Content Length(bytes)", "Speed", "URL" };
             }
             catch { }
         }

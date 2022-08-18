@@ -1,22 +1,18 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
-
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <PackageReference Include="VSSystem" Version="1.1.8" />
+  </ItemGroup>
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
     <UserSecretsId>4f069ebb-6d5b-455b-be75-880ded647455</UserSecretsId>
-	  <FileVersion>1.1.10</FileVersion>
-	  <Version>1.1.10</Version>
-	  <ApplicationIcon>eiq.ico</ApplicationIcon>
-	  
+    <FileVersion>2.0.3</FileVersion>
+    <Version>2.0.3</Version>
+    <OutputType>Exe</OutputType>
+    <Description>Proxy 2.0</Description>
+    <AssemblyName>ProxyAPI</AssemblyName>
+    <Company>Evidence IQ</Company>
+    <Authors>Evidence IQ</Authors>
+    <Copyright>Evidence IQ</Copyright>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Remove="GlobalMethods.cs" />
-    <Compile Remove="ProxyController.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\NETStd\Libraries\VSSystem\VSSystem.csproj" />
-  </ItemGroup>
-
-
 </Project>
